@@ -12,10 +12,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -25,7 +27,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 fun NetworkingScreen(
     viewModel: PostViewModel = hiltViewModel()
 ) {
-    val posts by viewModel.post.collectAsState()
+    val uiState by viewModel.post.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.getPosts()
@@ -38,27 +40,86 @@ fun NetworkingScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(innerPadding)
+
         ) {
-//            Button(onClick = {}) {
-//                Text(text = "Networking")
-//            }
-            PostList(
-                modifier = Modifier.fillMaxSize(),
-                posts = posts
-            )
+            when(uiState){
+                is NetworkingUiState.Loading -> {
+                    LoadingIndicator(
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                is NetworkingUiState.Success -> {
+                    val posts = (uiState as NetworkingUiState.Success).posts
+                    PostList(
+                        modifier = Modifier.fillMaxSize(),
+                        posts = posts
+                    )
+                }
+                is NetworkingUiState.Error -> {
+                    val message = (uiState as NetworkingUiState.Error).message
+                    ErrorView(
+                        modifier = Modifier.fillMaxSize(),
+                        msg = message,
+                        onRetryClick = { viewModel.getPosts() }
+                    )
+                }
+                else -> {}
+            }
+
         }
     }
 }
+
+@Composable
+fun ErrorView(
+    modifier: Modifier = Modifier,
+    msg: String,
+    onRetryClick: () -> Unit
+) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ){
+        Column (
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = msg,
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center
+            )
+            Button(onClick = onRetryClick) {
+                Text(text ="Retry")
+            }
+        }
+    }
+}
+
+
+@Composable
+fun LoadingIndicator(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ){
+        CircularProgressIndicator()
+    }
+
+}
+
 
 @Composable
 fun PostList(
     modifier: Modifier = Modifier,
     posts: List<Post>
 ) {
-    LazyColumn(modifier = modifier) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
         items(
             items = posts,
             key = {post -> post.id}
@@ -90,17 +151,25 @@ fun PostItem(
                     text = post.id.toString(),
                     style = MaterialTheme.typography.titleMedium
                 )
+
                 Spacer(modifier = Modifier.width(16.dp))
-                Text(
-                    text = post.title,
-                    style = MaterialTheme.typography.titleSmall
-                )
+
+                Column {
+
+
+                    Text(
+                        text = post.title,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = post.body,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
 
-            Text(
-                text = post.body,
-                style = MaterialTheme.typography.bodyMedium
-            )
+
         }
     }
 }

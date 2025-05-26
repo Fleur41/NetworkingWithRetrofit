@@ -2,9 +2,14 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.ksp)       // Apply KSP for this module
+    alias(libs.plugins.hilt.android)
 //    id("com.google.devtools.kapt")
-    kotlin("kapt")
-    id("com.google.dagger.hilt.android")
+//    kotlin("kapt")
+
+
+//    id("com.google.devtools.ksp") //ksp
+//    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -46,13 +51,22 @@ dependencies {
 
     //Hilt dep
     implementation(libs.hilt.android)
-    kapt(libs.hilt.android.compiler)
+//    kapt(libs.hilt.android.compiler)
     implementation (libs.androidx.hilt.navigation.compose)
+    ksp(libs.hilt.android.compiler.v2511)    // + ADD KSP for Hilt (same version)
 
 
     //Retrofit dep
     implementation(libs.retrofit)
     implementation(libs.converter.moshi)
+    implementation (libs.okhttp)
+    implementation (libs.logging.interceptor)
+
+    //Moshi
+    implementation (libs.moshi)
+    implementation (libs.moshi.kotlin)
+    // For Kotlin code generation (kapt instead of annotationProcessor)
+    ksp(libs.moshi.kotlin.codegen)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
